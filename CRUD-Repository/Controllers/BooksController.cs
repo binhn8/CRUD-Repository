@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRUD_Repository.Data;
 using CRUD_Repository.Models;
 
 namespace CRUD_Repository.Controllers
 {
-    public class BooksController : Controller
+	public class BooksController : Controller
     {
         private readonly BookContext _context;
 
@@ -19,14 +14,12 @@ namespace CRUD_Repository.Controllers
             _context = context;
         }
 
-        // GET: Books
         public async Task<IActionResult> Index()
         {
             var bookContext = _context.Books.Include(b => b.Author).Include(b => b.Category);
             return View(await bookContext.ToListAsync());
         }
 
-        // GET: Books/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Books == null)
@@ -42,22 +35,19 @@ namespace CRUD_Repository.Controllers
             {
                 return NotFound();
             }
-
             return View(book);
         }
 
-        // GET: Books/Create
         public IActionResult Create()
         {
-            ViewData["AuthorId"] = new SelectList(_context.Authors, "Id", "Id");
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id");
+            PopulateAuthorsList();
+            PopulateCategoriesList();
             return View();
         }
 
-        // POST: Books/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+		
+
+		[HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Published,AuthorId,CategoryId")] Book book)
         {
@@ -67,12 +57,9 @@ namespace CRUD_Repository.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.Authors, "Id", "Id", book.AuthorId);
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", book.CategoryId);
             return View(book);
         }
 
-        // GET: Books/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Books == null)
@@ -85,14 +72,12 @@ namespace CRUD_Repository.Controllers
             {
                 return NotFound();
             }
-            ViewData["AuthorId"] = new SelectList(_context.Authors, "Id", "Id", book.AuthorId);
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", book.CategoryId);
+			PopulateAuthorsList();
+			PopulateCategoriesList();
+
             return View(book);
         }
 
-        // POST: Books/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Published,AuthorId,CategoryId")] Book book)
@@ -122,12 +107,9 @@ namespace CRUD_Repository.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.Authors, "Id", "Id", book.AuthorId);
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", book.CategoryId);
             return View(book);
         }
 
-        // GET: Books/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Books == null)
@@ -143,11 +125,11 @@ namespace CRUD_Repository.Controllers
             {
                 return NotFound();
             }
-
+            PopulateAuthorsList();
+            PopulateCategoriesList();
             return View(book);
         }
 
-        // POST: Books/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -170,5 +152,22 @@ namespace CRUD_Repository.Controllers
         {
           return _context.Books.Any(e => e.Id == id);
         }
+
+        private void PopulateCategoriesList()
+        {
+            var categories = _context.Categories.ToList();
+            var categoryObject = new Category { Id = 0, Description = "-- Select --", Name = "-- Select --" };
+            categories.Insert(0, categoryObject);
+            ViewBag.Categories = categories;
+        }
+
+        private void PopulateAuthorsList()
+        {
+            var authors = _context.Authors.ToList();
+            var authorObject = new Author { Id = 0, FirstName = "-- Select --" , LastName = ""};
+            authors.Insert(0, authorObject);
+            ViewBag.Authors = authors;
+        }
+
     }
 }

@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRUD_Repository.Data;
 using CRUD_Repository.Models;
 
 namespace CRUD_Repository.Controllers
 {
-    public class AuthorsController : Controller
+	public class AuthorsController : Controller
     {
         private readonly BookContext _context;
 
@@ -19,13 +14,11 @@ namespace CRUD_Repository.Controllers
             _context = context;
         }
 
-        // GET: Authors
         public async Task<IActionResult> Index()
         {
               return View(await _context.Authors.ToListAsync());
         }
 
-        // GET: Authors/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Authors == null)
@@ -43,15 +36,11 @@ namespace CRUD_Repository.Controllers
             return View(author);
         }
 
-        // GET: Authors/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Authors/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,FirstName,LastName")] Author author)
@@ -65,7 +54,6 @@ namespace CRUD_Repository.Controllers
             return View(author);
         }
 
-        // GET: Authors/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Authors == null)
@@ -81,9 +69,6 @@ namespace CRUD_Repository.Controllers
             return View(author);
         }
 
-        // POST: Authors/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName")] Author author)
@@ -116,7 +101,6 @@ namespace CRUD_Repository.Controllers
             return View(author);
         }
 
-        // GET: Authors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Authors == null)
@@ -134,7 +118,6 @@ namespace CRUD_Repository.Controllers
             return View(author);
         }
 
-        // POST: Authors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

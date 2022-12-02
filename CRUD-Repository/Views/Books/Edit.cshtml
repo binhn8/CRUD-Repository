@@ -25,13 +25,11 @@
             </div>
             <div class="form-group">
                 <label asp-for="AuthorId" class="control-label"></label>
-                <select asp-for="AuthorId" class="form-control" asp-items="ViewBag.AuthorId"></select>
-                <span asp-validation-for="AuthorId" class="text-danger"></span>
+                @Html.DropDownListFor(m => m.AuthorId, new SelectList(ViewBag.Authors, "Id", "Fullname"), htmlAttributes: new { @class = "form-control" })
             </div>
             <div class="form-group">
                 <label asp-for="CategoryId" class="control-label"></label>
-                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId"></select>
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                @Html.DropDownListFor(m => m.CategoryId, new SelectList(ViewBag.Categories, "Id", "Name"), htmlAttributes: new { @class = "form-control" })
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
