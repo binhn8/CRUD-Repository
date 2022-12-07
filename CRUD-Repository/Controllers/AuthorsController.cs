@@ -2,32 +2,35 @@
 using Microsoft.EntityFrameworkCore;
 using CRUD_Repository.Data;
 using CRUD_Repository.Models;
+using CRUD_Repository.Repository;
 
 namespace CRUD_Repository.Controllers
 {
 	public class AuthorsController : Controller
     {
-        private readonly BookContext _context;
+        private readonly BookContext context;
+        private readonly IAuthorRepository authorRepository;
 
-        public AuthorsController(BookContext context)
+        public AuthorsController(BookContext context, IAuthorRepository authorRepository)
         {
-            _context = context;
+            this.context = context;
+            this.authorRepository = authorRepository;
         }
 
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Authors.ToListAsync());
+            var authors = await authorRepository.GetAll();
+            return View(authors);
         }
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Authors == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var author = await _context.Authors
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var author = await authorRepository.GetById((int)id);
             if (author == null)
             {
                 return NotFound();
@@ -47,8 +50,8 @@ namespace CRUD_Repository.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(author);
-                await _context.SaveChangesAsync();
+                await authorRepository.Insert(author);
+                await authorRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(author);
@@ -56,12 +59,12 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Authors == null)
+            if (id == null)
             {
                 return NotFound();
             }
-
-            var author = await _context.Authors.FindAsync(id);
+            
+            var author = await authorRepository.GetById((int)id);
             if (author == null)
             {
                 return NotFound();
@@ -82,8 +85,10 @@ namespace CRUD_Repository.Controllers
             {
                 try
                 {
-                    _context.Update(author);
-                    await _context.SaveChangesAsync();
+                    var authorObject = await authorRepository.GetById(id);
+                    authorObject.FirstName = author.FirstName;
+                    authorObject.LastName = author.LastName;
+                    await authorRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -103,13 +108,12 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Authors == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var author = await _context.Authors
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var author = await authorRepository.GetById((int)id);
             if (author == null)
             {
                 return NotFound();
@@ -122,23 +126,14 @@ namespace CRUD_Repository.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Authors == null)
-            {
-                return Problem("Entity set 'BookContext.Authors'  is null.");
-            }
-            var author = await _context.Authors.FindAsync(id);
-            if (author != null)
-            {
-                _context.Authors.Remove(author);
-            }
-            
-            await _context.SaveChangesAsync();
+            await authorRepository.Delete(id); 
+            await authorRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool AuthorExists(int id)
         {
-          return _context.Authors.Any(e => e.Id == id);
+          return authorRepository.GetById(id) != null;
         }
     }
 }

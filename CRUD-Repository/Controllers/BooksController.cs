@@ -2,35 +2,33 @@
 using Microsoft.EntityFrameworkCore;
 using CRUD_Repository.Data;
 using CRUD_Repository.Models;
+using CRUD_Repository.Repository;
 
 namespace CRUD_Repository.Controllers
 {
 	public class BooksController : Controller
     {
-        private readonly BookContext _context;
-
-        public BooksController(BookContext context)
+        private readonly BookContext context;
+        private readonly IBookRepository bookRepository;
+        public BooksController(BookContext context, IBookRepository bookRepository)
         {
-            _context = context;
+            this.context = context;
+            this.bookRepository = bookRepository;
         }
 
         public async Task<IActionResult> Index()
         {
-            var bookContext = _context.Books.Include(b => b.Author).Include(b => b.Category);
-            return View(await bookContext.ToListAsync());
+            var books = await bookRepository.GetAll();
+            return View(books);
         }
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Books == null)
+            if (id == null || context.Books == null)
             {
                 return NotFound();
             }
-
-            var book = await _context.Books
-                .Include(b => b.Author)
-                .Include(b => b.Category)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var book = await bookRepository.GetById((int)id);
             if (book == null)
             {
                 return NotFound();
@@ -45,16 +43,14 @@ namespace CRUD_Repository.Controllers
             return View();
         }
 
-		
-
 		[HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Published,AuthorId,CategoryId")] Book book)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(book);
-                await _context.SaveChangesAsync();
+                await bookRepository.Insert(book);
+                await bookRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(book);
@@ -62,12 +58,11 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Books == null)
+            if (id == null)
             {
                 return NotFound();
             }
-
-            var book = await _context.Books.FindAsync(id);
+            var book = await bookRepository.GetById((int)id);
             if (book == null)
             {
                 return NotFound();
@@ -91,8 +86,14 @@ namespace CRUD_Repository.Controllers
             {
                 try
                 {
-                    _context.Update(book);
-                    await _context.SaveChangesAsync();
+                    var bookObject = await bookRepository.GetById(id);
+                    bookObject.Author = book.Author;
+                    bookObject.AuthorId = book.AuthorId;
+                    bookObject.Category = book.Category;
+                    bookObject.CategoryId = book.CategoryId;
+                    bookObject.Published = book.Published;
+                    bookObject.Title = book.Title;
+                    await bookRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -112,15 +113,12 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Books == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var book = await _context.Books
-                .Include(b => b.Author)
-                .Include(b => b.Category)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var book = await bookRepository.GetById((int)id);
             if (book == null)
             {
                 return NotFound();
@@ -134,28 +132,19 @@ namespace CRUD_Repository.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Books == null)
-            {
-                return Problem("Entity set 'BookContext.Books'  is null.");
-            }
-            var book = await _context.Books.FindAsync(id);
-            if (book != null)
-            {
-                _context.Books.Remove(book);
-            }
-            
-            await _context.SaveChangesAsync();
+            await bookRepository.Delete(id);
+            await bookRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool BookExists(int id)
         {
-          return _context.Books.Any(e => e.Id == id);
+            return bookRepository.GetById(id) != null;
         }
 
         private void PopulateCategoriesList()
         {
-            var categories = _context.Categories.ToList();
+            var categories = context.Categories.ToList();
             var categoryObject = new Category { Id = 0, Description = "-- Select --", Name = "-- Select --" };
             categories.Insert(0, categoryObject);
             ViewBag.Categories = categories;
@@ -163,7 +152,7 @@ namespace CRUD_Repository.Controllers
 
         private void PopulateAuthorsList()
         {
-            var authors = _context.Authors.ToList();
+            var authors = context.Authors.ToList();
             var authorObject = new Author { Id = 0, FirstName = "-- Select --" , LastName = ""};
             authors.Insert(0, authorObject);
             ViewBag.Authors = authors;
