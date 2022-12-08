@@ -16,8 +16,8 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var bookContext = _context.Books.Include(b => b.Author).Include(b => b.Category);
-            return View(await bookContext.ToListAsync());
+            var book = _context.Books.Include(b => b.Author).Include(b => b.Category);
+            return View(await book.ToListAsync());
         }
 
         public async Task<IActionResult> Details(int? id)
