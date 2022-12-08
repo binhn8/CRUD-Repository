@@ -2,32 +2,32 @@
 using Microsoft.EntityFrameworkCore;
 using CRUD_Repository.Data;
 using CRUD_Repository.Models;
+using CRUD_Repository.Repository;
 
 namespace CRUD_Repository.Controllers
 {
 	public class CategoriesController : Controller
     {
-        private readonly BookContext _context;
-
-        public CategoriesController(BookContext context)
+        private readonly IRepository<Category, int> categoryRepository;
+        public CategoriesController(IRepository<Category, int> categoryRepository)
         {
-            _context = context;
+            this.categoryRepository = categoryRepository;
         }
 
-        public async Task<IActionResult> Index()
-        {
-              return View(await _context.Categories.ToListAsync());
-        }
+		public async Task<IActionResult> Index()
+		{
+			var categories = await categoryRepository.GetAll();
+			return View(categories);
+		}
 
-        public async Task<IActionResult> Details(int? id)
+		public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Categories == null)
+            if (id == null )
             {
                 return NotFound();
             }
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var category = await categoryRepository.GetById((int)id);
             if (category == null)
             {
                 return NotFound();
@@ -47,8 +47,8 @@ namespace CRUD_Repository.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(category);
-                await _context.SaveChangesAsync();
+                await categoryRepository.Insert(category);
+                await categoryRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(category);
@@ -56,12 +56,12 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Categories == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var category = await _context.Categories.FindAsync(id);
+            var category = await categoryRepository.GetById((int)id);
             if (category == null)
             {
                 return NotFound();
@@ -82,8 +82,10 @@ namespace CRUD_Repository.Controllers
             {
                 try
                 {
-                    _context.Update(category);
-                    await _context.SaveChangesAsync();
+                    var categoryObject = await categoryRepository.GetById(id);
+                    categoryObject.Name = category.Name;
+                    categoryObject.Description = category.Description;
+                    await categoryRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -103,13 +105,12 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Categories == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var category = await categoryRepository.GetById((int)id);
             if (category == null)
             {
                 return NotFound();
@@ -122,23 +123,14 @@ namespace CRUD_Repository.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Categories == null)
-            {
-                return Problem("Entity set 'BookContext.Categories'  is null.");
-            }
-            var category = await _context.Categories.FindAsync(id);
-            if (category != null)
-            {
-                _context.Categories.Remove(category);
-            }
-            
-            await _context.SaveChangesAsync();
+            await categoryRepository.Delete(id);
+            await categoryRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CategoryExists(int id)
         {
-          return _context.Categories.Any(e => e.Id == id);
+            return categoryRepository.GetById(id) != null;
         }
     }
 }

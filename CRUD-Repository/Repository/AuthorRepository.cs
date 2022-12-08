@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CRUD_Repository.Repository
 {
-	public class AuthorRepository : IAuthorRepository
+	public class AuthorRepository : IRepository<Author, int>
 	{
 		private readonly BookContext context;
 		public AuthorRepository(BookContext context)
@@ -29,10 +29,10 @@ namespace CRUD_Repository.Repository
 
 		public async Task Delete(int id)
 		{
-			var book = await context.Authors.FindAsync(id);
-			if (book != null)
+			var author = await context.Authors.FindAsync(id);
+			if (author != null)
 			{
-				context.Remove(book);
+				context.Remove(author);
 			}
 		}
 

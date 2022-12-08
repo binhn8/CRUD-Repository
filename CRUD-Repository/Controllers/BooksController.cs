@@ -8,12 +8,18 @@ namespace CRUD_Repository.Controllers
 {
 	public class BooksController : Controller
     {
-        private readonly BookContext context;
-        private readonly IBookRepository bookRepository;
-        public BooksController(BookContext context, IBookRepository bookRepository)
+        private readonly IRepository<Book, int> bookRepository;
+        private readonly IRepository<Category, int> categoryRepository;
+        private readonly IRepository<Author, int> authorRepository;
+        public BooksController(
+                                 IRepository<Book, int> bookRepository
+                                , IRepository<Category, int> categoryRepository
+                                , IRepository<Author, int> authorRepository
+                            )
         {
-            this.context = context;
             this.bookRepository = bookRepository;
+            this.authorRepository = authorRepository;
+            this.categoryRepository = categoryRepository;
         }
 
         public async Task<IActionResult> Index()
@@ -24,7 +30,7 @@ namespace CRUD_Repository.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || context.Books == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -144,7 +150,7 @@ namespace CRUD_Repository.Controllers
 
         private void PopulateCategoriesList()
         {
-            var categories = context.Categories.ToList();
+            var categories = categoryRepository.GetAll().Result.ToList();
             var categoryObject = new Category { Id = 0, Description = "-- Select --", Name = "-- Select --" };
             categories.Insert(0, categoryObject);
             ViewBag.Categories = categories;
@@ -152,7 +158,7 @@ namespace CRUD_Repository.Controllers
 
         private void PopulateAuthorsList()
         {
-            var authors = context.Authors.ToList();
+            var authors = authorRepository.GetAll().Result.ToList();
             var authorObject = new Author { Id = 0, FirstName = "-- Select --" , LastName = ""};
             authors.Insert(0, authorObject);
             ViewBag.Authors = authors;

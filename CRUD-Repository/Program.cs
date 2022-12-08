@@ -1,4 +1,5 @@
 using CRUD_Repository.Data;
+using CRUD_Repository.Models;
 using CRUD_Repository.Repository;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,8 +12,10 @@ builder.Services.AddDbContext<BookContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddScoped<IBookRepository, BookRepository>();
-builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IRepository<Book, int>, BookRepository>();
+builder.Services.AddScoped<IRepository<Author, int>, AuthorRepository>();
+builder.Services.AddScoped<IRepository<Category, int>, CategoryRepository>();
+
 
 var app = builder.Build();
 

@@ -8,12 +8,10 @@ namespace CRUD_Repository.Controllers
 {
 	public class AuthorsController : Controller
     {
-        private readonly BookContext context;
-        private readonly IAuthorRepository authorRepository;
+        private readonly IRepository<Author, int> authorRepository;
 
-        public AuthorsController(BookContext context, IAuthorRepository authorRepository)
+        public AuthorsController(IRepository<Author, int> authorRepository)
         {
-            this.context = context;
             this.authorRepository = authorRepository;
         }
 
